@@ -16,7 +16,7 @@ package:
     unknown_poll_directive: "Sorry, I couldn't find the poll you responded to."
     # No specific webhook needed here as WPPConnectAction's webhook handles inbound and passes data
   dependencies:
-    jivas: ^2.0.0
+    jivas: '>=2.0.0-alpha.48'
     actions:
-      jivas/wppconnect_action: ~0.0.7 # Dependency for dispatching polls
+      jivas/wppconnect_action: "~0.0.13" # Dependency for dispatching polls
     # No pip dependencies specific to this action itself beyond what Jiva core/WPPConnect action requires
