@@ -243,29 +243,31 @@ def render(router: StreamlitRouter, agent_id: str, action_id: str, info: dict) -
                             st.rerun()
 
                     current_status = poll_summary.get("status", "").upper()
-                    if current_status != "COMPLETED" and current_status != "ARCHIVED":
-                        if col_actions2.button(
-                            "Mark as Completed", key=f"complete_{poll_id}"
-                        ):
-                            with st.spinner(f"Marking poll {poll_id} as completed..."):
-                                payload = {
-                                    "operation": "update_status",
-                                    "internal_poll_group_id": poll_id,
-                                    "new_status": "COMPLETED",
-                                }
-                                st.text(f"Payload: {json.dumps(payload)}")
-                                res = call_action_walker_exec(
-                                    agent_id, module_root, "manage_poll_crud", payload
-                                )
-                                st.text(
-                                    f"Marking Poll {json.dumps(payload)} as completed: {json.dumps(res, indent=2)}"
-                                )
-                                if res and res.get("status") == "succeeded":
-                                    st.success("Poll marked completed.")
-                                else:
-                                    st.error(f"Failed: {res.get('message')}")
-                                st.session_state[f"{model_key}_polls_list_cache"] = None
-                                st.rerun()
+                    if current_status not in {
+                        "COMPLETED",
+                        "ARCHIVED",
+                    } and col_actions2.button(
+                        "Mark as Completed", key=f"complete_{poll_id}"
+                    ):
+                        with st.spinner(f"Marking poll {poll_id} as completed..."):
+                            payload = {
+                                "operation": "update_status",
+                                "internal_poll_group_id": poll_id,
+                                "new_status": "COMPLETED",
+                            }
+                            st.text(f"Payload: {json.dumps(payload)}")
+                            res = call_action_walker_exec(
+                                agent_id, module_root, "manage_poll_crud", payload
+                            )
+                            st.text(
+                                f"Marking Poll {json.dumps(payload)} as completed: {json.dumps(res, indent=2)}"
+                            )
+                            if res and res.get("status") == "succeeded":
+                                st.success("Poll marked completed.")
+                            else:
+                                st.error(f"Failed: {res.get('message')}")
+                            st.session_state[f"{model_key}_polls_list_cache"] = None
+                            st.rerun()
 
                     if col_actions3.button(
                         "🗑️ Delete Poll", type="primary", key=f"delete_{poll_id}"
