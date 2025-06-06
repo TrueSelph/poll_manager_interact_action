@@ -1,6 +1,6 @@
 ---
 name: Feature request
-about: Suggest an idea for the jivas DeepDocClientAction.
+about: Suggest an idea for the jivas PollManagerInteractAction.
 title: "[Feature Request]: "
 labels: ''
 assignees: ''

@@ -1,14 +1,14 @@
-name: Linting and Pre-commit checks for jivas DeepDocClientAction
+name: Linting and Pre-commit checks for jivas PollManagerInteractAction
 
 on:
   pull_request:
     paths:
-      - "deepdoc_client_action/**"
+      - "poll_manager_interact_action/**"
   push:
     branches:
       - main
     paths:
-      - "deepdoc_client_action/**"
+      - "poll_manager_interact_action/**"
 
 jobs:
   pre-commit-jaclang:

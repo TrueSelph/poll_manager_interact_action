@@ -33,7 +33,7 @@ jobs:
       - name: Get new version from info.yaml
         id: check
         run: |
-          NEW_VERSION=$(grep -oP '(?<=^  version: )\d+\.\d+\.\d+' deepdoc_client_action/info.yaml)
+          NEW_VERSION=$(grep -oP '(?<=^  version: )\d+\.\d+\.\d+' poll_manager_interact_action/info.yaml)
           echo "Detected package version: $NEW_VERSION"
           echo "new_version=${NEW_VERSION}" >> $GITHUB_ENV
           echo "new_version=${NEW_VERSION}" >> $GITHUB_OUTPUT
@@ -69,7 +69,7 @@ jobs:
         run: |
           echo "Publishing new version to Jivas Package Registry..."
           jvcli login --username ${{ secrets.JPR_ADMIN_USERNAME }} --password ${{ secrets.JPR_ADMIN_PASSWORD }}
-          jvcli publish action --path deepdoc_client_action --visibility public
+          jvcli publish action --path poll_manager_interact_action --visibility public
 
       - name: Configure Git
         run: |

@@ -1,6 +1,6 @@
 ---
 name: Bug report
-about: Create a report to report any bugs in the jivas DeepDocClientAction.
+about: Create a report to report any bugs in the jivas PollManagerInteractAction.
 title: "[BUG]: "
 labels: ''
 assignees: ''

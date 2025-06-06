@@ -1,6 +1,6 @@
 ---
 name: Refactor Request
-about: Request a refactor to the jivas DeepDocClientAction.
+about: Request a refactor to the jivas PollManagerInteractAction.
 title: "[Refactor Request]: "
 labels: ''
 assignees: ''

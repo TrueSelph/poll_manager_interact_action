@@ -1,4 +1,4 @@
-name: Running tests for jivas DeepDocClientAction
+name: Running tests for jivas PollManagerInteractAction
 on:
   pull_request:
   push:
