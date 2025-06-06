@@ -306,11 +306,11 @@ node PollManagerInteractAction :InteractAction: {
         wa_poll_id_voted_on = vote_data["poll_id"]; # This is the WhatsApp message ID of the poll
         user_id_voted = visitor.frame_node.session_id;
         selected_opts_obj = vote_data["selectedOptions"]; # List of dicts e.g. [{"name": "Option A"}]
-        
+
         selected_option_names = [opt["name"] for opt in selected_opts_obj if opt and "name" in opt];
 
         collection = self.get_collection();
-        
+
         # 1. Find the PollGroupNode using the wa_poll_id_voted_on
         # This walker (_find_poll_group_by_wa_id) finds the PollGroupNode that has this wa_poll_id in its dispatched_wa_ids
         found_poll_group_data = collection spawn _find_poll_group_by_wa_id(wa_id_to_find=wa_poll_id_voted_on);
@@ -325,7 +325,7 @@ node PollManagerInteractAction :InteractAction: {
             } else {
                 # 3. Poll is active. Now check if this user has already responded to *any instance* of this *internal poll group*.
                 # If they have, update that response. Otherwise, create a new one.
-                
+
                 # Walker to find existing response from this user for this poll_group_node.id
                 existing_response_data = poll_group_node spawn _find_user_response_for_poll_group(
                     user_id_to_find=user_id_voted
@@ -336,13 +336,13 @@ node PollManagerInteractAction :InteractAction: {
                     # User has responded to this internal poll group before (possibly via a different WA poll ID instance of the same poll)
                     response_node_to_use = existing_response_data.response_node;
                     self.logger.info(f"User {user_id_voted} is updating their response for internal poll group {poll_group_node.poll_id}. Previous WA Poll ID: {response_node_to_use.whatsapp_poll_id_responded_to}, New WA Poll ID: {wa_poll_id_voted_on}");
-                    
+
                     # Update existing response node
                     response_node_to_use.selected_options_names = selected_option_names;
                     response_node_to_use.voted_at = datetime.now(timezone.utc).isoformat();
                     # Important: Update which WA Poll ID this latest vote corresponds to,
                     # especially if they are voting on a newer dispatch of the same conceptual poll.
-                    response_node_to_use.whatsapp_poll_id_responded_to = wa_poll_id_voted_on; 
+                    response_node_to_use.whatsapp_poll_id_responded_to = wa_poll_id_voted_on;
 
                     visitor.interaction_node.add_directive(self.response_recorded_directive); # i.e "Your response has been updated."
                     self.logger.info(f"Updated vote from {user_id_voted} for WA Poll {wa_poll_id_voted_on} (Internal Group: {poll_group_node.poll_id}). New Choices: {selected_option_names}");
@@ -362,7 +362,7 @@ node PollManagerInteractAction :InteractAction: {
                         parent_poll_group_id=poll_group_node.poll_id # Reference to parent
                     );
                     poll_group_node ++> response_node_to_use; # Link new response to its poll group
-                    
+
                     visitor.interaction_node.add_directive(self.response_recorded_directive);
                     self.logger.info(f"Recorded new vote from {user_id_voted} for WA Poll {wa_poll_id_voted_on} (Internal Group: {poll_group_node.poll_id}). Choices: {selected_option_names}");
                 }
@@ -371,8 +371,8 @@ node PollManagerInteractAction :InteractAction: {
             visitor.interaction_node.add_directive(self.unknown_poll_directive);
             self.logger.warning(f"Could not find internal poll group for WA Poll ID: {wa_poll_id_voted_on} responded by {user_id_voted}. Poll may be old, unregistered, or mapping missing.");
         }
-        
-        visitor.set_next_action("PersonaInteractAction"); 
+
+        visitor.set_next_action("PersonaInteractAction");
         return visitor.export();
     }
 
@@ -691,8 +691,8 @@ walker _purge_poll { # Spawns on Collection
 }
 
 walker _find_user_response_for_poll_group { # This walker spawns on a PollGroupNode
-    obj __specs__ { 
-        static has private: bool = True; 
+    obj __specs__ {
+        static has private: bool = True;
     }
 
     has user_id_to_find: str;
