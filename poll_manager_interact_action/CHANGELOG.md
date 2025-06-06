@@ -28,8 +28,3 @@
   - Basic configuration display.
 - `find_existing_poll_by_definition` ability to group dispatches of identical polls under a single internal ID.
 - README.md and this CHANGELOG.md.
-
-### Known Issues / To Be Addressed
-
-- **Duplicate Dispatch:** The action currently does not prevent sending the same poll definition to the same user multiple times if `dispatch_poll_via_wpp` is called repeatedly for that user. Each dispatch will create a new WhatsApp poll message. While votes will be linked to the same internal poll group (if definitions match), the user experience might be suboptimal. This is targeted for improvement in a future version.
-- Persistence of `active_wa_poll_to_internal_id` map relies on rebuilding from collection or could be made more robust with its own collection node if performance becomes an issue for very frequent vote processing on many active polls. Current implementation for vote lookup (`_find_poll_group_by_wa_id_walker`) queries the `dispatched_wa_ids` within `PollGroupNode`s, which is good for persistence.

@@ -79,13 +79,6 @@
 - **Python Libraries**: (Typically managed by Jivas environment, ensure compatibility if custom versions are needed)
   - `requests` (if WPPConnect uses it, or for any direct HTTP by this action - not currently used directly)
 
-## Important Note (v0.0.1)
-
-- **Duplicate Dispatch Prevention:** The current version of `dispatch_poll_via_wpp` and `register_dispatched_poll_instance` **does not actively prevent sending the exact same poll definition to the same user multiple times if called repeatedly.** While `create_poll_group_entry` attempts to find and reuse existing poll *definitions* by content or preferred ID, it doesn't track if a specific `whatsapp_poll_id` has already been generated for that *user* for that *definition* recently.
-- **Consequence:** If you dispatch the same poll definition to the same user session ID multiple times, they will receive multiple poll messages and can potentially vote on each. Each vote will be recorded against the respective `whatsapp_poll_id`, but all linked to the same `internal_poll_group_id`.
-- **Mitigation:** Users of this action (e.g., UI logic or other calling actions) should implement their own checks if they need to prevent re-sending an identical active poll to a user.
-- This behavior will be reviewed for improvement in future versions.
-
 ## Setup
 
 1.  Ensure `WPPConnectAction` and `PulseAction` are configured for your agent.
