@@ -1,7 +1,7 @@
 import:py from datetime { datetime, timezone, timedelta }
 import:py from typing { List, Dict, Optional }
 import:jac from jivas.agent.core.graph_node { GraphNode }
-import:jac from actions.rolex.poll_manager_interact_action.poll_status { PollStatus } 
+import:jac from actions.rolex.poll_manager_interact_action.poll_status { PollStatus }
 import:py from jivas.agent.modules.agentlib.utils { Utils } # For node_obj helper
 import:jac from actions.rolex.poll_manager_interact_action.poll_response_node { PollResponseNode }
 
@@ -20,7 +20,7 @@ node PollGroupNode :GraphNode: {
 
     # Stores WhatsApp message IDs of dispatched instances of this poll definition
     # Key: whatsapp_message_id, Value: user_session_id it was sent to (or True if broadcast)
-    has dispatched_wa_ids: dict = {}; 
+    has dispatched_wa_ids: dict = {};
 
 
     can set_definition(
@@ -74,7 +74,7 @@ node PollGroupNode :GraphNode: {
             # "response_count": self.get_responses_count() # This would require a traversal
         };
     }
-    
+
     can export_full_definition() -> dict {
         # Similar to summary but could be expanded later if needed
         return self.export_summary(); # For now, same as summary

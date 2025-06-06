@@ -9,7 +9,7 @@ walker get_poll_data :interact_graph_walker: {
     has data_type: str = "aggregated_results"; # "definition", "responses", "aggregated_results"
     has page: int = 1; # For "all_summaries"
     has limit: int = 10; # For "all_summaries"
-    
+
     has response: Union[Dict, List, None] = None;
 
     can on_agent with Agent entry { visit [-->](`?Actions); }
@@ -24,7 +24,7 @@ walker get_poll_data :interact_graph_walker: {
                 self.response = here.get_poll_responses_data(internal_poll_group_id=self.internal_poll_group_id);
             } elif (self.data_type == "aggregated_results") {
                 self.response = here.get_aggregated_poll_results_data(internal_poll_group_id=self.internal_poll_group_id);
-            } else { 
+            } else {
                 self.response = {"error": f"Unknown data_type '{self.data_type}' for specific poll."};
             }
         } else {

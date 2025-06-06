@@ -8,8 +8,8 @@ import:py from typing { Union, List, Dict, Optional, Any, Tuple }
 import:jac from jivas.agent.action.interact_action { InteractAction }
 import:jac from jivas.agent.action.interact_graph_walker { interact_graph_walker }
 import:jac from jivas.agent.memory.interaction_response { InteractionMessage, MediaInteractionMessage }
-import:jac from jivas.agent.memory.collection { Collection } 
-import:jac from actions.rolex.poll_manager_interact_action.poll_group_node { PollGroupNode }  
+import:jac from jivas.agent.memory.collection { Collection }
+import:jac from actions.rolex.poll_manager_interact_action.poll_group_node { PollGroupNode }
 import:jac from actions.rolex.poll_manager_interact_action.poll_response_node { PollResponseNode }
 import:jac from actions.rolex.poll_manager_interact_action.poll_status { PollStatus }
 import:jac from jivas.agent.core.graph_node { GraphNode }
@@ -36,7 +36,7 @@ node PollManagerInteractAction :InteractAction: {
         self.logger.info("PollManagerInteractAction disabling. Stopping poll lifecycle pulse scheduler.");
         self.stop_poll_lifecycle_pulse();
     }
-    
+
     can post_register() {
         # post register procedure to start the outbox scheduler
         self.start_poll_lifecycle_pulse();
@@ -66,7 +66,7 @@ node PollManagerInteractAction :InteractAction: {
         collection = self.get_collection();
 
         active_polls = collection spawn _get_polls_by_status(status_to_find=PollStatus.ACTIVE);
-        
+
         now_iso = datetime.now(timezone.utc).isoformat();
 
         for poll_node_data in active_polls.polls { # Assuming walker returns a list of dicts or node objects
@@ -103,7 +103,7 @@ node PollManagerInteractAction :InteractAction: {
             "duration_minutes": poll_definition.get("options", {}).get("duration_minutes") # Will be None if not present
             # Copy other non-WPP-specific options if needed
         };
-        
+
         if (not poll_name or not choices) {
             self.logger.error("Cannot register poll: name or choices missing from definition.");
             return None;
@@ -128,7 +128,7 @@ node PollManagerInteractAction :InteractAction: {
             return None;
         }
     }
-    
+
     can dispatch_poll_via_wpp(
         target_user_session_id: str,
         poll_name: str,
@@ -152,7 +152,7 @@ node PollManagerInteractAction :InteractAction: {
 
 
         poll_im = MediaInteractionMessage(mime="jivas/poll", content="", data=poll_def_for_wpp);
-        
+
         self.logger.info(f"Dispatching poll '{poll_name}' to {target_user_session_id}");
         wpp_send_result = wpp_action.send_message(session_id=target_user_session_id, message=poll_im);
         self.logger.debug(f"WPPConnect send result: {wpp_send_result}");
@@ -163,10 +163,10 @@ node PollManagerInteractAction :InteractAction: {
             wa_response_details = wpp_send_result.get("response")[0] if isinstance(wpp_send_result.get("response"), list) and wpp_send_result.get("response") else wpp_send_result.get("response");
             whatsapp_poll_id = wa_response_details.get("id") if isinstance(wa_response_details, dict) else "unknown_wa_id";
             internal_poll_group_id = wpp_send_result.get("internal_poll_group_id") if isinstance(wa_response_details, dict) else None;
-            
+
             # Use full poll_options (including duration) for creating PollGroupNode
             # created_poll_node = self.create_poll_group_entry(
-            #     poll_name=poll_name, choices=choices, options=poll_options, 
+            #     poll_name=poll_name, choices=choices, options=poll_options,
             #     preferred_id=preferred_internal_id
             # );
             # if (created_poll_node) {
@@ -198,12 +198,12 @@ node PollManagerInteractAction :InteractAction: {
             return {"status": "failed", "message": "WPPConnectAction failed to send.", "details": wpp_send_result};
         }
     }
-    
+
     can create_poll_group_entry(
         poll_name: str, choices: List[str], options: Dict, preferred_id: Optional[str] = None
     ) -> Optional[PollGroupNode] {
         collection = self.get_collection();
-        
+
         # Check for existing by preferred_id first if provided
         target_id = preferred_id;
         existing_node = None;
@@ -211,7 +211,7 @@ node PollManagerInteractAction :InteractAction: {
             existing_node_data = collection spawn _get_poll_by_id(internal_id=target_id);
             if (existing_node_data and existing_node_data.poll) { existing_node = existing_node_data.poll; }
         }
-        
+
         # If not found by preferred_id, or preferred_id not given, check by content
         if (not existing_node) {
             content_match_data = collection spawn _find_poll_by_def(
@@ -225,7 +225,7 @@ node PollManagerInteractAction :InteractAction: {
             # Normalize for comparison
             norm_choices_target = tuple(sorted(choices));
             norm_options_target = tuple(sorted(options if isinstance(options, dict) else {}.items()));
-            
+
             norm_choices_current = tuple(sorted(existing_node.choices if isinstance(existing_node.choices, list) else []));
             norm_options_current = tuple(sorted(existing_node.options.items() if isinstance(existing_node.options, dict) else {}.items()));
 
@@ -250,7 +250,7 @@ node PollManagerInteractAction :InteractAction: {
                 existing_node = None;
             }
         }
-        
+
         if (existing_node) {
             self.logger.info(f"Found existing poll group: {existing_node.poll_id}. Reusing.");
             # Potentially update expires_at if a new duration is given for a re-dispatch of same poll
@@ -280,7 +280,7 @@ node PollManagerInteractAction :InteractAction: {
         } else {
             new_poll_node = PollGroupNode();
             new_poll_node.set_definition(name=poll_name, choices=choices, options=options, preferred_id=preferred_id);
-            
+
             # If no preferred_id, use GraphNode's id as poll_id
             collection ++> new_poll_node;
             self.logger.info(f"Created new poll group: {new_poll_node.poll_id}");
@@ -293,14 +293,14 @@ node PollManagerInteractAction :InteractAction: {
         if (visitor.data and isinstance(visitor.data, list) and
             "content" in visitor.data[0] and isinstance(visitor.data[0]["content"], dict) and
             "selectedOptions" in visitor.data[0]["content"] and
-            visitor.data[0]["content"].get("poll_id") 
+            visitor.data[0]["content"].get("poll_id")
         ) {
             self.logger.info(f"Poll vote detected for WA Poll ID: {visitor.data[0]['content'].get('poll_id')}");
             return True;
         }
         return False;
     }
-        
+
     can execute(visitor: interact_graph_walker) -> dict {
         vote_data = visitor.data[0]["content"];
         wa_poll_id_voted = vote_data["poll_id"];
@@ -334,8 +334,8 @@ node PollManagerInteractAction :InteractAction: {
             visitor.interaction_node.add_directive(self.unknown_poll_directive);
             self.logger.warning(f"Could not find internal poll for WA Poll ID: {wa_poll_id_voted}.");
         }
-        
-        visitor.set_next_action("PersonaInteractAction"); 
+
+        visitor.set_next_action("PersonaInteractAction");
         return visitor.export();
     }
 
@@ -358,12 +358,12 @@ node PollManagerInteractAction :InteractAction: {
         }
         return [];
     }
-    
+
     can get_aggregated_poll_results_data(internal_poll_group_id: str) -> Dict {
         collection = self.get_collection();
 
         results_summary = {"definition": None, "counts": {}, "total_responses": 0, "status": "not_found"};
-        
+
         node_data = collection spawn _get_poll_by_id(internal_id=internal_poll_group_id);
         if (node_data and node_data.poll) {
             poll_node = node_data.poll;
@@ -460,27 +460,27 @@ node PollManagerInteractAction :InteractAction: {
 
 walker _get_poll_by_id { # Spawns on Collection
     # Finds a PollGroupNode by its internal ID
-    obj __specs__ { 
-        static has private: bool = True; 
+    obj __specs__ {
+        static has private: bool = True;
     }
 
     has internal_id: str = "";
     has poll: PollGroupNode = None;
 
-    can on_collection with Collection entry { 
-        visit [-->](`?PollGroupNode)(?poll_id == self.internal_id); 
+    can on_collection with Collection entry {
+        visit [-->](`?PollGroupNode)(?poll_id == self.internal_id);
     }
 
-    can on_poll_group_node with PollGroupNode entry { 
-        self.poll = here; 
-        disengage; 
+    can on_poll_group_node with PollGroupNode entry {
+        self.poll = here;
+        disengage;
     }
 }
 
 walker _find_poll_by_def { # Spawns on Collection
     # Finds a PollGroupNode by its definition (name, choices, options)
-    obj __specs__ { 
-        static has private: bool = True; 
+    obj __specs__ {
+        static has private: bool = True;
     }
 
     has name_to_find: str = "";
@@ -488,15 +488,15 @@ walker _find_poll_by_def { # Spawns on Collection
     has options_to_find: Dict = {};
     has poll: PollGroupNode = None;
 
-    can on_collection with Collection entry { 
-        visit [-->](`?PollGroupNode); 
+    can on_collection with Collection entry {
+        visit [-->](`?PollGroupNode);
     }
-    
+
     can on_poll_group_node with PollGroupNode entry {
         # Normalize for comparison
         norm_choices_target = tuple(sorted(self.choices_to_find));
         norm_options_target = tuple(sorted(self.options_to_find.items() if isinstance(self.options_to_find, dict) else {}.items()));
-        
+
         norm_choices_current = tuple(sorted(here.choices if isinstance(here.choices, list) else []));
         norm_options_current = tuple(sorted(here.options.items() if isinstance(here.options, dict) else {}.items()));
 
@@ -515,16 +515,16 @@ walker _find_poll_by_def { # Spawns on Collection
 
 walker _find_poll_group_by_wa_id { # Spawns on Collection
     # Finds a PollGroupNode by a WhatsApp message ID in its dispatched_wa_ids
-    obj __specs__ { 
-        static has private: bool = True; 
+    obj __specs__ {
+        static has private: bool = True;
     }
 
     has wa_id_to_find: str = "";
     has poll: PollGroupNode = None;
 
 
-    can on_collection with Collection entry { 
-        visit [-->](`?PollGroupNode); 
+    can on_collection with Collection entry {
+        visit [-->](`?PollGroupNode);
     }
 
     can on_poll_group_node with PollGroupNode entry {
@@ -537,25 +537,25 @@ walker _find_poll_group_by_wa_id { # Spawns on Collection
 
 walker _get_linked_responses_data { # Spawns on PollGroupNode
     # Collects all linked PollResponseNode data for a specific PollGroupNode
-    obj __specs__ { 
-        static has private: bool = True; 
+    obj __specs__ {
+        static has private: bool = True;
     }
 
     has responses: List[dict] = [];
 
-    can on_poll_group_node with PollGroupNode entry { 
-        visit [-->](`?PollResponseNode); 
+    can on_poll_group_node with PollGroupNode entry {
+        visit [-->](`?PollResponseNode);
     }
 
-    can on_poll_response_node with PollResponseNode entry { 
-        self.responses.append(here.export_data()); 
+    can on_poll_response_node with PollResponseNode entry {
+        self.responses.append(here.export_data());
     }
 }
 
 walker _list_all_polls { # Spawns on Collection
     # Lists all PollGroupNodes with pagination support
-    obj __specs__ { 
-        static has private: bool = True; 
+    obj __specs__ {
+        static has private: bool = True;
     }
 
     has page: int = 1;
@@ -565,7 +565,7 @@ walker _list_all_polls { # Spawns on Collection
     has current_page: int = 1;
     has page_limit: int = 10;
     has total_pages: int = 0;
-    
+
     # Internal counters
     has idx_counter: int = 0;
     has offset: int = 0;
@@ -587,10 +587,10 @@ walker _list_all_polls { # Spawns on Collection
             self.current_page = 1;
             self.page_limit = self.total_poll_count; # Effectively no limit
         }
-        
+
         # Second pass to collect items for the current page
         # Reset counter for actual collection pass
-        self.idx_counter = 0; 
+        self.idx_counter = 0;
         visit [-->](`?PollGroupNode); # Re-traverse to apply pagination
     }
 
@@ -607,26 +607,26 @@ walker _list_all_polls { # Spawns on Collection
 
 walker _get_polls_by_status { # Spawns on Collection
     # Finds all PollGroupNodes with a specific status
-    obj __specs__ { 
-        static has private: bool = True; 
+    obj __specs__ {
+        static has private: bool = True;
     }
 
     has status_to_find: PollStatus = PollStatus.ACTIVE; # Default to ACTIVE
     has polls: List[Dict] = []; # Returning list of exported data for simplicity
 
-    can on_collection with Collection entry { 
-        visit [-->](`?PollGroupNode)(?status == self.status_to_find); 
+    can on_collection with Collection entry {
+        visit [-->](`?PollGroupNode)(?status == self.status_to_find);
     }
 
-    can on_poll_group_node with PollGroupNode entry { 
-        self.polls.append(here.export_summary()); 
+    can on_poll_group_node with PollGroupNode entry {
+        self.polls.append(here.export_summary());
     }
 }
 
 walker _purge_poll { # Spawns on Collection
     # Purges a PollGroupNode and all its linked PollResponseNodes
-    obj __specs__ { 
-        static has private: bool = True; 
+    obj __specs__ {
+        static has private: bool = True;
     }
 
     has poll_id_to_purge: str = "";
