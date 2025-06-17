@@ -9,9 +9,9 @@ import:jac from jivas.agent.action.interact_action { InteractAction }
 import:jac from jivas.agent.action.interact_graph_walker { interact_graph_walker }
 import:jac from jivas.agent.memory.interaction_response { InteractionMessage, MediaInteractionMessage }
 import:jac from jivas.agent.memory.collection { Collection }
-import:jac from actions.rolex.poll_manager_interact_action.poll_group_node { PollGroupNode }
-import:jac from actions.rolex.poll_manager_interact_action.poll_response_node { PollResponseNode }
-import:jac from actions.rolex.poll_manager_interact_action.poll_status { PollStatus }
+import:jac from actions.jivas.poll_manager_interact_action.poll_group_node { PollGroupNode }
+import:jac from actions.jivas.poll_manager_interact_action.poll_response_node { PollResponseNode }
+import:jac from actions.jivas.poll_manager_interact_action.poll_status { PollStatus }
 import:jac from jivas.agent.core.graph_node { GraphNode }
 
 
@@ -28,12 +28,10 @@ node PollManagerInteractAction :InteractAction: {
 
     # --- Lifecycle Management ---
     can on_enable() {
-        self.logger.info("PollManagerInteractAction enabled. Starting pulse scheduler for poll lifecycle.");
         self.start_poll_lifecycle_pulse();
     }
 
     can on_disable() {
-        self.logger.info("PollManagerInteractAction disabling. Stopping poll lifecycle pulse scheduler.");
         self.stop_poll_lifecycle_pulse();
     }
 
@@ -164,27 +162,6 @@ node PollManagerInteractAction :InteractAction: {
             whatsapp_poll_id = wa_response_details.get("id") if isinstance(wa_response_details, dict) else "unknown_wa_id";
             internal_poll_group_id = wpp_send_result.get("internal_poll_group_id") if isinstance(wa_response_details, dict) else None;
 
-            # Use full poll_options (including duration) for creating PollGroupNode
-            # created_poll_node = self.create_poll_group_entry(
-            #     poll_name=poll_name, choices=choices, options=poll_options,
-            #     preferred_id=preferred_internal_id
-            # );
-            # if (created_poll_node) {
-            #     created_poll_node.add_dispatched_wa_id(wa_message_id=whatsapp_poll_id, user_session_id=target_user_session_id);
-            #     # Map WA Poll ID to our internal group ID (still useful for quick lookup on response)
-            #     # This map can be rebuilt from collection on load if needed, or also stored in collection if more robust.
-            #     # For now, keeping it in memory for speed, but acknowledge persistence challenge.
-            #     # A better way: store this mapping also in a simple collection or as part of PollGroupNode.
-            #     # self.active_wa_poll_to_internal_id[whatsapp_poll_id] = created_poll_node.poll_id;
-            #     # Let's create a dedicated node for this mapping if needed for full persistence.
-            #     # For now, we'll rely on querying by WA ID if touch() needs it.
-
-            #     self.logger.info(f"Poll dispatched: WA_ID={whatsapp_poll_id}, Internal_ID={created_poll_node.poll_id}");
-            #     return {
-            #         "status": "succeeded", "whatsapp_poll_id": whatsapp_poll_id,
-            #         "internal_poll_group_id": created_poll_node.poll_id
-            #     };
-            # }
             if (internal_poll_group_id) {
                 self.logger.info(f"Poll dispatched: WA_ID={whatsapp_poll_id}, Internal_ID={internal_poll_group_id}");
                 return {

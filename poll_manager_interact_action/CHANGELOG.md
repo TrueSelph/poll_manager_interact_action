@@ -28,3 +28,8 @@
   - Basic configuration display.
 - `find_existing_poll_by_definition` ability to group dispatches of identical polls under a single internal ID.
 - README.md and this CHANGELOG.md.
+
+## [0.0.2] - 2025-06-17
+### Bug Fix
+
+- Fixed broken imports and removed excess logs.
