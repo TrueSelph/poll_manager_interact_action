@@ -2,7 +2,7 @@ package:
   name: jivas/poll_manager_interact_action
   author: AA
   architype: PollManagerInteractAction
-  version: 0.0.1
+  version: 0.0.2
   meta:
     title: Poll Management Interact Action
     description: Manages dispatch, response collection, and basic analytics for polls via WPPConnect.
