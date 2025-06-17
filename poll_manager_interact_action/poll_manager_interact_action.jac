@@ -9,9 +9,9 @@ import:jac from jivas.agent.action.interact_action { InteractAction }
 import:jac from jivas.agent.action.interact_graph_walker { interact_graph_walker }
 import:jac from jivas.agent.memory.interaction_response { InteractionMessage, MediaInteractionMessage }
 import:jac from jivas.agent.memory.collection { Collection }
-import:jac from actions.rolex.poll_manager_interact_action.poll_group_node { PollGroupNode }
-import:jac from actions.rolex.poll_manager_interact_action.poll_response_node { PollResponseNode }
-import:jac from actions.rolex.poll_manager_interact_action.poll_status { PollStatus }
+import:jac from actions.jivas.poll_manager_interact_action.poll_group_node { PollGroupNode }
+import:jac from actions.jivas.poll_manager_interact_action.poll_response_node { PollResponseNode }
+import:jac from actions.jivas.poll_manager_interact_action.poll_status { PollStatus }
 import:jac from jivas.agent.core.graph_node { GraphNode }
 
 
