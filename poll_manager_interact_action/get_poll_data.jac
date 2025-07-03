@@ -1,10 +1,10 @@
-import:py from typing { List, Dict, Optional, Union }
-import:jac from jivas.agent.action.interact_graph_walker { interact_graph_walker }
-import:jac from jivas.agent.core.agent { Agent }
-import:jac from jivas.agent.action.action { Action }
-import:jac from jivas.agent.action.actions { Actions }
+import from typing { List, Dict, Optional, Union }
+import from jivas.agent.action.interact_graph_walker { interact_graph_walker }
+import from jivas.agent.core.agent { Agent }
+import from jivas.agent.action.action { Action }
+import from jivas.agent.action.actions { Actions }
 
-walker get_poll_data :interact_graph_walker: {
+walker get_poll_data(interact_graph_walker) {
     has internal_poll_group_id: str = None;
     has data_type: str = "aggregated_results"; # "definition", "responses", "aggregated_results"
     has page: int = 1; # For "all_summaries"

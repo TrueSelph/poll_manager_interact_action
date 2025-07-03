@@ -33,3 +33,6 @@
 ### Bug Fix
 
 - Fixed broken imports and removed excess logs.
+
+## 0.1.0
+- Updated to support Jivas 2.1.0

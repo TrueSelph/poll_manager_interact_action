@@ -1,12 +1,12 @@
-import:py logging;
-import:py from logging { Logger }
-import:py from typing { List, Dict, Optional }
-import:jac from jivas.agent.action.interact_graph_walker { interact_graph_walker }
-import:jac from jivas.agent.core.agent { Agent }
-import:jac from jivas.agent.action.action { Action }
-import:jac from jivas.agent.action.actions { Actions }
+import logging;
+import from logging { Logger }
+import from typing { List, Dict, Optional }
+import from jivas.agent.action.interact_graph_walker { interact_graph_walker }
+import from jivas.agent.core.agent { Agent }
+import from jivas.agent.action.action { Action }
+import from jivas.agent.action.actions { Actions }
 
-walker dispatch_new_poll :interact_graph_walker: {
+walker dispatch_new_poll(interact_graph_walker) {
     static has logger:Logger = logging.getLogger(__name__);
 
     has target_user_session_id: str = '';

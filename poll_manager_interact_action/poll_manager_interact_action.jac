@@ -1,21 +1,22 @@
-import:py logging;
-import:py json;
-import:py uuid;
-import:py os;
-import:py from datetime { datetime, timezone, timedelta }
-import:py from logging { Logger }
-import:py from typing { Union, List, Dict, Optional, Any, Tuple }
-import:jac from jivas.agent.action.interact_action { InteractAction }
-import:jac from jivas.agent.action.interact_graph_walker { interact_graph_walker }
-import:jac from jivas.agent.memory.interaction_response { InteractionMessage, MediaInteractionMessage }
-import:jac from jivas.agent.memory.collection { Collection }
-import:jac from actions.jivas.poll_manager_interact_action.poll_group_node { PollGroupNode }
-import:jac from actions.jivas.poll_manager_interact_action.poll_response_node { PollResponseNode }
-import:jac from actions.jivas.poll_manager_interact_action.poll_status { PollStatus }
-import:jac from jivas.agent.core.graph_node { GraphNode }
+import logging;
+import json;
+import uuid;
+import os;
+import from datetime { datetime, timezone, timedelta }
+import from logging { Logger }
+import from typing { Union, List, Dict, Optional, Any, Tuple }
+import from jivas.agent.action.interact_action { InteractAction }
+import from jivas.agent.action.interact_graph_walker { interact_graph_walker }
+import from jivas.agent.memory.interaction_response { InteractionMessage, MediaInteractionMessage }
+import from jivas.agent.memory.collection { Collection }
+import from actions.jivas.poll_manager_interact_action.poll_group_node { PollGroupNode }
+import from actions.jivas.poll_manager_interact_action.poll_response_node { PollResponseNode }
+import from actions.jivas.poll_manager_interact_action.poll_status { PollStatus }
+import from jivas.agent.core.graph_node { GraphNode }
+import from jac_cloud.plugin.jaseci { JacPlugin as Jac }
 
 
-node PollManagerInteractAction :InteractAction: {
+node PollManagerInteractAction(InteractAction) {
     static has logger:Logger = logging.getLogger(__name__);
 
     # --- Configuration ---
@@ -27,20 +28,20 @@ node PollManagerInteractAction :InteractAction: {
     has pulse_interval_seconds: int = 300; # Check poll expirations every 5 minutes
 
     # --- Lifecycle Management ---
-    can on_enable() {
+    def on_enable() {
         self.start_poll_lifecycle_pulse();
     }
 
-    can on_disable() {
+    def on_disable() {
         self.stop_poll_lifecycle_pulse();
     }
 
-    can post_register() {
+    def post_register() {
         # post register procedure to start the outbox scheduler
         self.start_poll_lifecycle_pulse();
     }
 
-    can start_poll_lifecycle_pulse() {
+    def start_poll_lifecycle_pulse() {
         if (pulse_action := self.get_agent().get_actions().get(action_label="PulseAction")) {
             action_label = self.label;
             interval_spec = f'every({self.pulse_interval_seconds}).seconds';
@@ -52,14 +53,14 @@ node PollManagerInteractAction :InteractAction: {
         }
     }
 
-    can stop_poll_lifecycle_pulse() {
+    def stop_poll_lifecycle_pulse() {
         if (pulse_action := self.get_agent().get_actions().get(action_label="PulseAction")) {
             pulse_action.remove_schedule(action_label=self.label);
             self.logger.info(f"Poll lifecycle pulse for '{self.label}' stopped.");
         }
     }
 
-    can pulse() { # This ability is called by PulseAction
+    def pulse() { # This ability is called by PulseAction
         self.logger.debug("PollManagerInteractAction pulse: Checking for expired active polls.");
         collection = self.get_collection();
 
@@ -84,7 +85,7 @@ node PollManagerInteractAction :InteractAction: {
     }
 
     # --- Core Abilities ---
-    can register_dispatched_poll_instance(
+    def register_dispatched_poll_instance(
         poll_definition: dict = {}, # Expects {"name", "choices", "options": {"selectableCount", "duration_minutes", ...other_wpp_opts}}
         user_session_id: str = "",  # User it was sent to (can be group ID for WPPConnect)
         whatsapp_poll_id: str = "", # ID of the WA message containing the poll from WPPConnect response
@@ -127,7 +128,7 @@ node PollManagerInteractAction :InteractAction: {
         }
     }
 
-    can dispatch_poll_via_wpp(
+    def dispatch_poll_via_wpp(
         target_user_session_id: str,
         poll_name: str,
         choices: List[str],
@@ -176,7 +177,7 @@ node PollManagerInteractAction :InteractAction: {
         }
     }
 
-    can create_poll_group_entry(
+    def create_poll_group_entry(
         poll_name: str, choices: List[str], options: Dict, preferred_id: Optional[str] = None
     ) -> Optional[PollGroupNode] {
         collection = self.get_collection();
@@ -265,7 +266,7 @@ node PollManagerInteractAction :InteractAction: {
         }
     }
 
-    can touch(visitor: interact_graph_walker) -> bool {
+    def touch(visitor: interact_graph_walker) -> bool {
         # (Logic to detect poll vote in visitor.data)
         if (visitor.data and isinstance(visitor.data, list) and
             "content" in visitor.data[0] and isinstance(visitor.data[0]["content"], dict) and
@@ -278,7 +279,7 @@ node PollManagerInteractAction :InteractAction: {
         return False;
     }
 
-    can execute(visitor: interact_graph_walker) -> dict {
+    def execute(visitor: interact_graph_walker) -> None {
         vote_data = visitor.data[0]["content"];
         wa_poll_id_voted_on = vote_data["poll_id"]; # This is the WhatsApp message ID of the poll
         user_id_voted = visitor.frame_node.session_id;
@@ -350,11 +351,11 @@ node PollManagerInteractAction :InteractAction: {
         }
 
         visitor.set_next_action("PersonaInteractAction");
-        return visitor.export();
+
     }
 
     # --- CRUD & Data Retrieval for Polls (using Collection) ---
-    can get_poll_definition_data(internal_poll_group_id: str) -> Optional[dict] {
+    def get_poll_definition_data(internal_poll_group_id: str) -> Optional[dict] {
         collection = self.get_collection();
 
         node_data = collection spawn _get_poll_by_id(internal_id=internal_poll_group_id);
@@ -362,7 +363,7 @@ node PollManagerInteractAction :InteractAction: {
         return None;
     }
 
-    can get_poll_responses_data(internal_poll_group_id: str) -> List[dict] {
+    def get_poll_responses_data(internal_poll_group_id: str) -> List[dict] {
         collection = self.get_collection();
 
         node_data = collection spawn _get_poll_by_id(internal_id=internal_poll_group_id);
@@ -373,7 +374,7 @@ node PollManagerInteractAction :InteractAction: {
         return [];
     }
 
-    can get_aggregated_poll_results_data(internal_poll_group_id: str) -> Dict {
+    def get_aggregated_poll_results_data(internal_poll_group_id: str) -> Dict {
         collection = self.get_collection();
 
         results_summary = {"definition": None, "counts": {}, "total_responses": 0, "status": "not_found"};
@@ -401,7 +402,7 @@ node PollManagerInteractAction :InteractAction: {
         return results_summary;
     }
 
-    can get_all_managed_polls_summary_data(page: int = 1, limit: int = 10) -> Dict {
+    def get_all_managed_polls_summary_data(page: int = 1, limit: int = 10) -> Dict {
         # Uses a new walker for paginated listing from collection
         collection = self.get_collection();
 
@@ -418,7 +419,7 @@ node PollManagerInteractAction :InteractAction: {
         return {"items": [], "page": 1, "limit": limit, "total_items": 0, "total_pages": 0};
     }
 
-    can update_poll_status(internal_poll_group_id: str, new_status_str: str) -> bool {
+    def update_poll_status(internal_poll_group_id: str, new_status_str: str) -> bool {
         collection = self.get_collection();
 
         node_data = collection spawn _get_poll_by_id(internal_id=internal_poll_group_id);
@@ -440,7 +441,7 @@ node PollManagerInteractAction :InteractAction: {
         return False;
     }
 
-    can delete_poll_group(internal_poll_group_id: str) -> bool {
+    def delete_poll_group(internal_poll_group_id: str) -> bool {
         collection = self.get_collection();
 
         node_data = collection spawn _get_poll_by_id(internal_id=internal_poll_group_id);

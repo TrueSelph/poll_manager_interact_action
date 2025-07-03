@@ -1,11 +1,11 @@
-import:py from datetime { datetime, timezone, timedelta }
-import:py from typing { List, Dict, Optional }
-import:jac from jivas.agent.core.graph_node { GraphNode }
-import:jac from actions.jivas.poll_manager_interact_action.poll_status { PollStatus }
-import:py from jivas.agent.modules.agentlib.utils { Utils } # For node_obj helper
-import:jac from actions.jivas.poll_manager_interact_action.poll_response_node { PollResponseNode }
+import from datetime { datetime, timezone, timedelta }
+import from typing { List, Dict, Optional }
+import from jivas.agent.core.graph_node { GraphNode }
+import from actions.jivas.poll_manager_interact_action.poll_status { PollStatus }
+import from jivas.agent.modules.agentlib.utils { Utils } # For node_obj helper
+import from actions.jivas.poll_manager_interact_action.poll_response_node { PollResponseNode }
 
-node PollGroupNode :GraphNode: {
+node PollGroupNode(GraphNode) {
     # Stores the definition of a poll and acts as an anchor for its responses.
     # The 'id' of this node (GraphNode.id) will be our internal_poll_group_id if no preffered id is passed.
 
@@ -23,7 +23,7 @@ node PollGroupNode :GraphNode: {
     has dispatched_wa_ids: dict = {};
 
 
-    can set_definition(
+    def set_definition(
         name: str,
         choices: List[str],
         options: Dict, # e.g., {"selectableCount": 1, "duration_minutes": 60}
@@ -43,7 +43,7 @@ node PollGroupNode :GraphNode: {
         }
     }
 
-    can add_dispatched_wa_id(wa_message_id: str, user_session_id: str) {
+    def add_dispatched_wa_id(wa_message_id: str, user_session_id: str) {
         # Ensures dispatched_wa_ids is initialized if it wasn't upon node creation
         if (not isinstance(self.dispatched_wa_ids, dict)) {
             self.dispatched_wa_ids = {};
@@ -51,7 +51,7 @@ node PollGroupNode :GraphNode: {
         self.dispatched_wa_ids[wa_message_id] = user_session_id; # Store who it was sent to
     }
 
-    can get_responses_count() -> int {
+    def get_responses_count() -> int {
         # Counts distinct users who responded
         # A more complex query might be needed if responses are directly linked nodes
         # For now, assume responses are stored elsewhere or this is just a quick count
@@ -61,7 +61,7 @@ node PollGroupNode :GraphNode: {
         return len(response_nodes.responses_summary) if response_nodes else 0;
     }
 
-    can export_summary() -> dict {
+    def export_summary() -> dict {
         return {
             "internal_poll_group_id": self.poll_id, # GraphNode's own id
             "name": self.name,
@@ -75,7 +75,7 @@ node PollGroupNode :GraphNode: {
         };
     }
 
-    can export_full_definition() -> dict {
+    def export_full_definition() -> dict {
         # Similar to summary but could be expanded later if needed
         return self.export_summary(); # For now, same as summary
     }
