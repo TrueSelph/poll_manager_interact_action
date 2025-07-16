@@ -6,7 +6,7 @@ import from datetime { datetime, timezone, timedelta }
 import from logging { Logger }
 import from typing { Union, List, Dict, Optional, Any, Tuple }
 import from jivas.agent.action.interact_action { InteractAction }
-import from jivas.agent.action.interact_graph_walker { interact_graph_walker }
+import from jivas.agent.action.agent_graph_walker { agent_graph_walker }
 import from jivas.agent.memory.interaction_response { InteractionMessage, MediaInteractionMessage }
 import from jivas.agent.memory.collection { Collection }
 import from actions.jivas.poll_manager_interact_action.poll_group_node { PollGroupNode }
@@ -266,7 +266,7 @@ node PollManagerInteractAction(InteractAction) {
         }
     }
 
-    def touch(visitor: interact_graph_walker) -> bool {
+    def touch(visitor: agent_graph_walker) -> bool {
         # (Logic to detect poll vote in visitor.data)
         if (visitor.data and isinstance(visitor.data, list) and
             "content" in visitor.data[0] and isinstance(visitor.data[0]["content"], dict) and
@@ -279,7 +279,7 @@ node PollManagerInteractAction(InteractAction) {
         return False;
     }
 
-    def execute(visitor: interact_graph_walker) -> None {
+    def execute(visitor: agent_graph_walker) -> None {
         vote_data = visitor.data[0]["content"];
         wa_poll_id_voted_on = vote_data["poll_id"]; # This is the WhatsApp message ID of the poll
         user_id_voted = visitor.frame_node.session_id;

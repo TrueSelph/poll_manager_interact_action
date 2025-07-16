@@ -1,11 +1,11 @@
 import from typing { Dict, Optional, Literal }
-import from jivas.agent.action.interact_graph_walker { interact_graph_walker }
+import from jivas.agent.action.agent_graph_walker { agent_graph_walker }
 import from jivas.agent.core.agent { Agent }
 import from jivas.agent.action.action { Action }
 import from jivas.agent.action.actions { Actions }
 
 
-walker manage_poll_crud(interact_graph_walker) {
+walker manage_poll_crud(agent_graph_walker) {
     has operation: Literal["update_status", "delete", "archive"] = "update_status";
     has internal_poll_group_id: str = "";
     has new_status: str = None; # e.g., "COMPLETED", "ARCHIVED"
