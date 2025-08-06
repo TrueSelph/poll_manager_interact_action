@@ -2,8 +2,8 @@ import from datetime { datetime, timezone, timedelta }
 import from typing { List, Dict, Optional }
 import from jivas.agent.core.graph_node { GraphNode }
 import from actions.jivas.poll_manager_interact_action.poll_status { PollStatus }
-import from jivas.agent.modules.agentlib.utils { Utils } # For node_obj helper
 import from actions.jivas.poll_manager_interact_action.poll_response_node { PollResponseNode }
+
 
 node PollGroupNode(GraphNode) {
     # Stores the definition of a poll and acts as an anchor for its responses.

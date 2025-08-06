@@ -5,6 +5,8 @@ import from jivas.agent.action.agent_graph_walker { agent_graph_walker }
 import from jivas.agent.core.agent { Agent }
 import from jivas.agent.action.action { Action }
 import from jivas.agent.action.actions { Actions }
+import from jivas.agent.modules.action.path { action_walker_path }
+
 
 walker dispatch_new_poll(agent_graph_walker) {
     static has logger:Logger = logging.getLogger(__name__);
@@ -16,12 +18,24 @@ walker dispatch_new_poll(agent_graph_walker) {
     has preferred_internal_id: str = "";
     has duration_minutes: int = None; # If provided, will set expiration
     has options_extra: dict = {}; # For WPPConnect specific options
-
     has response: dict = {}; # To store result from the action
+    has reporting:bool = True;
 
-    can on_agent with Agent entry { visit [-->](`?Actions); }
-    can on_actions with Actions entry { visit [-->](`?Action)(?enabled==True)(?label=='PollManagerInteractAction'); }
-    can on_action with Action entry { # Assuming 'here' is PollManagerInteractAction
+    class __specs__ {
+        static has private: bool = False;
+        static has path: str = action_walker_path(__module__);
+    }
+
+    can on_agent with Agent entry { 
+        visit [-->](`?Actions); 
+    }
+
+    can on_actions with Actions entry { 
+        visit [-->](`?Action)(?enabled==True)(?label=='PollManagerInteractAction'); 
+    }
+
+    can on_action with Action entry { 
+        # Assuming 'here' is PollManagerInteractAction
         self.response = here.dispatch_poll_via_wpp(
             target_user_session_id=self.target_user_session_id,
             poll_name=self.poll_name,
@@ -31,5 +45,9 @@ walker dispatch_new_poll(agent_graph_walker) {
             duration_minutes=self.duration_minutes,
             options_extra=self.options_extra
         );
+
+        if self.reporting {
+            report self.response;
+        }
     }
 }

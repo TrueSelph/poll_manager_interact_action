@@ -6,7 +6,7 @@ import json
 
 import pandas as pd
 import streamlit as st
-from jvclient.lib.utils import call_action_walker_exec
+from jvclient.lib.utils import call_api
 from jvclient.lib.widgets import app_controls, app_header, app_update_action
 from streamlit_router import StreamlitRouter  # Assuming this is part of your setup
 
@@ -100,6 +100,7 @@ def render(router: StreamlitRouter, agent_id: str, action_id: str, info: dict) -
                 else:
                     with st.spinner("Dispatching poll..."):
                         payload = {
+                            "agent_id": agent_id,
                             "target_user_session_id": st.session_state[
                                 f"{model_key}_target_user"
                             ],
@@ -118,8 +119,8 @@ def render(router: StreamlitRouter, agent_id: str, action_id: str, info: dict) -
                             ]
                             or None,
                         }
-                        result = call_action_walker_exec(
-                            agent_id, module_root, "dispatch_new_poll", payload
+                        result = call_api(
+                            endpoint="action/walker/poll_manager_interact_action/dispatch_new_poll", json_data=payload
                         )
                         st.text(f"Dispatch Result: {json.dumps(result, indent=2)}")
                         if result and result.get("status") == "succeeded":
@@ -149,12 +150,13 @@ def render(router: StreamlitRouter, agent_id: str, action_id: str, info: dict) -
         if st.session_state.get(f"{model_key}_polls_list_cache") is None:
             with st.spinner("Loading polls..."):
                 list_payload = {
+                    "agent_id": agent_id,
                     "data_type": "all_summaries",
                     "page": st.session_state[f"{model_key}_polls_list_page"],
                     "limit": st.session_state[f"{model_key}_polls_list_limit"],
                 }
-                list_result = call_action_walker_exec(
-                    agent_id, module_root, "get_poll_data", list_payload
+                list_result = call_api(
+                    endpoint="action/walker/poll_manager_interact_action/get_poll_data", json_data=list_payload
                 )
                 if (
                     list_result
@@ -231,9 +233,10 @@ def render(router: StreamlitRouter, agent_id: str, action_id: str, info: dict) -
                             payload = {
                                 "operation": "archive",
                                 "internal_poll_group_id": poll_id,
+                                "agent_id": agent_id,
                             }
-                            res = call_action_walker_exec(
-                                agent_id, module_root, "manage_poll_crud", payload
+                            res = call_api(
+                                endpoint="action/walker/poll_manager_interact_action/manage_poll_crud", json_data=payload
                             )
                             if res and res.get("status") == "succeeded":
                                 st.success("Poll archived.")
@@ -254,10 +257,11 @@ def render(router: StreamlitRouter, agent_id: str, action_id: str, info: dict) -
                                 "operation": "update_status",
                                 "internal_poll_group_id": poll_id,
                                 "new_status": "COMPLETED",
+                                "agent_id": agent_id,
                             }
                             st.text(f"Payload: {json.dumps(payload)}")
-                            res = call_action_walker_exec(
-                                agent_id, module_root, "manage_poll_crud", payload
+                            res = call_api(
+                                endpoint="action/walker/poll_manager_interact_action/manage_poll_crud", json_data=payload
                             )
                             st.text(
                                 f"Marking Poll {json.dumps(payload)} as completed: {json.dumps(res, indent=2)}"
@@ -277,9 +281,10 @@ def render(router: StreamlitRouter, agent_id: str, action_id: str, info: dict) -
                             payload = {
                                 "operation": "delete",
                                 "internal_poll_group_id": poll_id,
+                                "agent_id": agent_id,
                             }
-                            res = call_action_walker_exec(
-                                agent_id, module_root, "manage_poll_crud", payload
+                            res = call_api(
+                                endpoint="action/walker/poll_manager_interact_action/manage_poll_crud", json_data=payload
                             )
                             if res and res.get("status") == "succeeded":
                                 st.success("Poll deleted.")
@@ -299,9 +304,10 @@ def render(router: StreamlitRouter, agent_id: str, action_id: str, info: dict) -
                     payload_details = {
                         "internal_poll_group_id": selected_id_view,
                         "data_type": "aggregated_results",
+                        "agent_id": agent_id,
                     }
-                    details_data = call_action_walker_exec(
-                        agent_id, module_root, "get_poll_data", payload_details
+                    details_data = call_api(
+                        endpoint="action/walker/poll_manager_interact_action/get_poll_data", json_data=payload_details
                     )
 
                 if details_data and "definition" in details_data:
@@ -342,9 +348,10 @@ def render(router: StreamlitRouter, agent_id: str, action_id: str, info: dict) -
                         raw_payload = {
                             "internal_poll_group_id": selected_id_view,
                             "data_type": "responses",
+                            "agent_id": agent_id,
                         }
-                        raw_data = call_action_walker_exec(
-                            agent_id, module_root, "get_poll_data", raw_payload
+                        raw_data = call_api(
+                            endpoint="action/walker/poll_manager_interact_action/get_poll_data", json_data=raw_payload
                         )
                         st.json(raw_data if raw_data else [])
                 else:
