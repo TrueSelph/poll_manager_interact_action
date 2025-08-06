@@ -120,7 +120,8 @@ def render(router: StreamlitRouter, agent_id: str, action_id: str, info: dict) -
                             or None,
                         }
                         result = call_api(
-                            endpoint="action/walker/poll_manager_interact_action/dispatch_new_poll", json_data=payload
+                            endpoint="action/walker/poll_manager_interact_action/dispatch_new_poll",
+                            json_data=payload,
                         )
                         st.text(f"Dispatch Result: {json.dumps(result, indent=2)}")
                         if result and result.get("status") == "succeeded":
@@ -156,7 +157,8 @@ def render(router: StreamlitRouter, agent_id: str, action_id: str, info: dict) -
                     "limit": st.session_state[f"{model_key}_polls_list_limit"],
                 }
                 list_result = call_api(
-                    endpoint="action/walker/poll_manager_interact_action/get_poll_data", json_data=list_payload
+                    endpoint="action/walker/poll_manager_interact_action/get_poll_data",
+                    json_data=list_payload,
                 )
                 if (
                     list_result
@@ -236,7 +238,8 @@ def render(router: StreamlitRouter, agent_id: str, action_id: str, info: dict) -
                                 "agent_id": agent_id,
                             }
                             res = call_api(
-                                endpoint="action/walker/poll_manager_interact_action/manage_poll_crud", json_data=payload
+                                endpoint="action/walker/poll_manager_interact_action/manage_poll_crud",
+                                json_data=payload,
                             )
                             if res and res.get("status") == "succeeded":
                                 st.success("Poll archived.")
@@ -261,7 +264,8 @@ def render(router: StreamlitRouter, agent_id: str, action_id: str, info: dict) -
                             }
                             st.text(f"Payload: {json.dumps(payload)}")
                             res = call_api(
-                                endpoint="action/walker/poll_manager_interact_action/manage_poll_crud", json_data=payload
+                                endpoint="action/walker/poll_manager_interact_action/manage_poll_crud",
+                                json_data=payload,
                             )
                             st.text(
                                 f"Marking Poll {json.dumps(payload)} as completed: {json.dumps(res, indent=2)}"
@@ -284,7 +288,8 @@ def render(router: StreamlitRouter, agent_id: str, action_id: str, info: dict) -
                                 "agent_id": agent_id,
                             }
                             res = call_api(
-                                endpoint="action/walker/poll_manager_interact_action/manage_poll_crud", json_data=payload
+                                endpoint="action/walker/poll_manager_interact_action/manage_poll_crud",
+                                json_data=payload,
                             )
                             if res and res.get("status") == "succeeded":
                                 st.success("Poll deleted.")
@@ -307,7 +312,8 @@ def render(router: StreamlitRouter, agent_id: str, action_id: str, info: dict) -
                         "agent_id": agent_id,
                     }
                     details_data = call_api(
-                        endpoint="action/walker/poll_manager_interact_action/get_poll_data", json_data=payload_details
+                        endpoint="action/walker/poll_manager_interact_action/get_poll_data",
+                        json_data=payload_details,
                     )
 
                 if details_data and "definition" in details_data:
@@ -351,7 +357,8 @@ def render(router: StreamlitRouter, agent_id: str, action_id: str, info: dict) -
                             "agent_id": agent_id,
                         }
                         raw_data = call_api(
-                            endpoint="action/walker/poll_manager_interact_action/get_poll_data", json_data=raw_payload
+                            endpoint="action/walker/poll_manager_interact_action/get_poll_data",
+                            json_data=raw_payload,
                         )
                         st.json(raw_data if raw_data else [])
                 else:

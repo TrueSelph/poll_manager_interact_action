@@ -7,7 +7,7 @@ import from jivas.agent.modules.action.path { action_walker_path }
 
 
 walker manage_poll_crud(agent_graph_walker) {
-    
+
     has operation: Literal["update_status", "delete", "archive"] = "update_status";
     has internal_poll_group_id: str = "";
     has new_status: str = None; # e.g., "COMPLETED", "ARCHIVED"
@@ -19,14 +19,14 @@ walker manage_poll_crud(agent_graph_walker) {
         static has path: str = action_walker_path(__module__);
     }
 
-    can on_agent with Agent entry { 
-        visit [-->](`?Actions); 
+    can on_agent with Agent entry {
+        visit [-->](`?Actions);
     }
-    
-    can on_actions with Actions entry { 
-        visit [-->](`?Action)(?enabled==True)(?label=='PollManagerInteractAction'); 
+
+    can on_actions with Actions entry {
+        visit [-->](`?Action)(?enabled==True)(?label=='PollManagerInteractAction');
     }
-    
+
     can on_action with Action entry {
         if (self.operation == "update_status") {
             if (self.new_status) {

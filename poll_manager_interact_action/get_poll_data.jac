@@ -7,7 +7,7 @@ import from jivas.agent.modules.action.path { action_walker_path }
 
 
 walker get_poll_data(agent_graph_walker) {
-    
+
     has internal_poll_group_id: str = None;
     has data_type: str = "aggregated_results"; # "definition", "responses", "aggregated_results"
     has page: int = 1; # For "all_summaries"
@@ -20,14 +20,14 @@ walker get_poll_data(agent_graph_walker) {
         static has path: str = action_walker_path(__module__);
     }
 
-    can on_agent with Agent entry { 
-        visit [-->](`?Actions); 
+    can on_agent with Agent entry {
+        visit [-->](`?Actions);
     }
-    
-    can on_actions with Actions entry { 
-        visit [-->](`?Action)(?enabled==True)(?label=='PollManagerInteractAction'); 
+
+    can on_actions with Actions entry {
+        visit [-->](`?Action)(?enabled==True)(?label=='PollManagerInteractAction');
     }
-    
+
     can on_action with Action entry { # 'here' is PollManagerInteractAction
         if (self.data_type == "all_summaries") {
             self.response = here.get_all_managed_polls_summary_data(page=self.page, limit=self.limit);

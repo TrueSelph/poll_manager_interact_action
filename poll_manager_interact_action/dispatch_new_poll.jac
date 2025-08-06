@@ -26,15 +26,15 @@ walker dispatch_new_poll(agent_graph_walker) {
         static has path: str = action_walker_path(__module__);
     }
 
-    can on_agent with Agent entry { 
-        visit [-->](`?Actions); 
+    can on_agent with Agent entry {
+        visit [-->](`?Actions);
     }
 
-    can on_actions with Actions entry { 
-        visit [-->](`?Action)(?enabled==True)(?label=='PollManagerInteractAction'); 
+    can on_actions with Actions entry {
+        visit [-->](`?Action)(?enabled==True)(?label=='PollManagerInteractAction');
     }
 
-    can on_action with Action entry { 
+    can on_action with Action entry {
         # Assuming 'here' is PollManagerInteractAction
         self.response = here.dispatch_poll_via_wpp(
             target_user_session_id=self.target_user_session_id,
