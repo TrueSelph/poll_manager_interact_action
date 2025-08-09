@@ -6,7 +6,7 @@ import json
 
 import pandas as pd
 import streamlit as st
-from jvclient.lib.utils import call_api
+from jvclient.lib.utils import call_api, get_reports_payload
 from jvclient.lib.widgets import app_controls, app_header, app_update_action
 from streamlit_router import StreamlitRouter  # Assuming this is part of your setup
 
@@ -119,24 +119,28 @@ def render(router: StreamlitRouter, agent_id: str, action_id: str, info: dict) -
                             ]
                             or None,
                         }
+                        poll_result = {}
                         result = call_api(
                             endpoint="action/walker/poll_manager_interact_action/dispatch_new_poll",
                             json_data=payload,
                         )
-                        st.text(f"Dispatch Result: {json.dumps(result, indent=2)}")
-                        if result and result.get("status") == "succeeded":
+                        if result and result.status_code == 200:
+                            poll_result = get_reports_payload(result)
+
+                        st.text(f"Dispatch Result: {json.dumps(poll_result, indent=2)}")
+                        if poll_result and poll_result.get("status") == "succeeded":
                             st.success(
-                                f"Poll dispatch initiated! WA ID: {result.get('whatsapp_poll_id')}, Internal Group ID: {result.get('internal_poll_group_id')}"
+                                f"Poll dispatch initiated! WA ID: {poll_result.get('whatsapp_poll_id')}, Internal Group ID: {poll_result.get('internal_poll_group_id')}"
                             )
                             st.session_state[f"{model_key}_polls_list_cache"] = (
                                 None  # Invalidate list cache
                             )
                         else:
                             st.error(
-                                f"Failed to dispatch poll: {result.get('message', 'Unknown error')}"
+                                f"Failed to dispatch poll: {poll_result.get('message', 'Unknown error')}"
                             )
-                            if result and result.get("details"):
-                                st.json(result.get("details"))
+                            if poll_result and poll_result.get("details"):
+                                st.json(poll_result.get("details"))
 
     with tab2:
         st.subheader("Managed Polls")
@@ -156,10 +160,14 @@ def render(router: StreamlitRouter, agent_id: str, action_id: str, info: dict) -
                     "page": st.session_state[f"{model_key}_polls_list_page"],
                     "limit": st.session_state[f"{model_key}_polls_list_limit"],
                 }
-                list_result = call_api(
+                list_result = {}
+                result = call_api(
                     endpoint="action/walker/poll_manager_interact_action/get_poll_data",
                     json_data=list_payload,
                 )
+                if result and result.status_code == 200:
+                    list_result = get_reports_payload(result)
+
                 if (
                     list_result
                     and isinstance(list_result, dict)
@@ -237,10 +245,14 @@ def render(router: StreamlitRouter, agent_id: str, action_id: str, info: dict) -
                                 "internal_poll_group_id": poll_id,
                                 "agent_id": agent_id,
                             }
-                            res = call_api(
+                            res = {}
+                            result = call_api(
                                 endpoint="action/walker/poll_manager_interact_action/manage_poll_crud",
                                 json_data=payload,
                             )
+                            if result and result.status_code == 200:
+                                res = get_reports_payload(result)
+
                             if res and res.get("status") == "succeeded":
                                 st.success("Poll archived.")
                             else:
@@ -263,10 +275,14 @@ def render(router: StreamlitRouter, agent_id: str, action_id: str, info: dict) -
                                 "agent_id": agent_id,
                             }
                             st.text(f"Payload: {json.dumps(payload)}")
-                            res = call_api(
+                            res = {}
+                            result = call_api(
                                 endpoint="action/walker/poll_manager_interact_action/manage_poll_crud",
                                 json_data=payload,
                             )
+                            if result and result.status_code == 200:
+                                res = get_reports_payload(result)
+
                             st.text(
                                 f"Marking Poll {json.dumps(payload)} as completed: {json.dumps(res, indent=2)}"
                             )
@@ -287,10 +303,14 @@ def render(router: StreamlitRouter, agent_id: str, action_id: str, info: dict) -
                                 "internal_poll_group_id": poll_id,
                                 "agent_id": agent_id,
                             }
-                            res = call_api(
+                            res = {}
+                            result = call_api(
                                 endpoint="action/walker/poll_manager_interact_action/manage_poll_crud",
                                 json_data=payload,
                             )
+                            if result and result.status_code == 200:
+                                res = get_reports_payload(result)
+
                             if res and res.get("status") == "succeeded":
                                 st.success("Poll deleted.")
                             else:
@@ -311,60 +331,73 @@ def render(router: StreamlitRouter, agent_id: str, action_id: str, info: dict) -
                         "data_type": "aggregated_results",
                         "agent_id": agent_id,
                     }
-                    details_data = call_api(
+                    details_data = {}
+                    result = call_api(
                         endpoint="action/walker/poll_manager_interact_action/get_poll_data",
                         json_data=payload_details,
                     )
+                    if result and result.status_code == 200:
+                        details_data = get_reports_payload(result)
 
-                if details_data and "definition" in details_data:
-                    st.markdown(
-                        f"**Name:** {details_data['definition'].get('name', 'N/A')}"
-                    )
-                    st.markdown(f"**Status:** {details_data.get('status', 'N/A')}")
-                    st.caption(
-                        f"Expires: {details_data['definition'].get('expires_at', 'N/A')}"
-                    )
-                    st.write("Choices:", details_data["definition"].get("choices", []))
-                    st.write("Options:", details_data["definition"].get("options", {}))
-                    st.write(
-                        f"Total Responses Recorded: {details_data.get('total_responses', 0)}"
-                    )
-
-                    counts_data = details_data.get("counts", {})
-                    if counts_data:
-                        df_data = [
-                            {"Option": choice, "Votes": count}
-                            for choice, count in counts_data.items()
-                        ]
-                        if (
-                            df_data
-                        ):  # Ensure data is not empty before creating DataFrame
-                            df = pd.DataFrame(df_data)
-                            st.bar_chart(df.set_index("Option"))
-                            st.dataframe(df.set_index("Option"))
-                        else:
-                            st.info("No vote data to display for chart.")
-                    else:
-                        st.info("No responses yet or no countable choices.")
-
-                    if st.checkbox(
-                        "Show Raw Responses Data",
-                        key=f"{model_key}_show_raw_details_{selected_id_view}",
-                    ):
-                        raw_payload = {
-                            "internal_poll_group_id": selected_id_view,
-                            "data_type": "responses",
-                            "agent_id": agent_id,
-                        }
-                        raw_data = call_api(
-                            endpoint="action/walker/poll_manager_interact_action/get_poll_data",
-                            json_data=raw_payload,
+                    if details_data and "definition" in details_data:
+                        st.markdown(
+                            f"**Name:** {details_data['definition'].get('name', 'N/A')}"
                         )
-                        st.json(raw_data if raw_data else [])
-                else:
-                    st.error(f"Could not load details for poll ID: {selected_id_view}")
-                    if details_data:
-                        st.json(details_data)
+                        st.markdown(f"**Status:** {details_data.get('status', 'N/A')}")
+                        st.caption(
+                            f"Expires: {details_data['definition'].get('expires_at', 'N/A')}"
+                        )
+                        st.write(
+                            "Choices:", details_data["definition"].get("choices", [])
+                        )
+                        st.write(
+                            "Options:", details_data["definition"].get("options", {})
+                        )
+                        st.write(
+                            f"Total Responses Recorded: {details_data.get('total_responses', 0)}"
+                        )
+
+                        counts_data = details_data.get("counts", {})
+                        if counts_data:
+                            df_data = [
+                                {"Option": choice, "Votes": count}
+                                for choice, count in counts_data.items()
+                            ]
+                            if (
+                                df_data
+                            ):  # Ensure data is not empty before creating DataFrame
+                                df = pd.DataFrame(df_data)
+                                st.bar_chart(df.set_index("Option"))
+                                st.dataframe(df.set_index("Option"))
+                            else:
+                                st.info("No vote data to display for chart.")
+                        else:
+                            st.info("No responses yet or no countable choices.")
+
+                        if st.checkbox(
+                            "Show Raw Responses Data",
+                            key=f"{model_key}_show_raw_details_{selected_id_view}",
+                        ):
+                            raw_payload = {
+                                "internal_poll_group_id": selected_id_view,
+                                "data_type": "responses",
+                                "agent_id": agent_id,
+                            }
+                            raw_data = []
+                            result = call_api(
+                                endpoint="action/walker/poll_manager_interact_action/get_poll_data",
+                                json_data=raw_payload,
+                            )
+                            if result and result.status_code == 200:
+                                raw_data = get_reports_payload(result)
+
+                            st.json(raw_data if raw_data else [])
+                    else:
+                        st.error(
+                            f"Could not load details for poll ID: {selected_id_view}"
+                        )
+                        if details_data:
+                            st.json(details_data)
 
     with tab3:
         st.subheader("Poll Manager Configuration")
