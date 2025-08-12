@@ -3,9 +3,9 @@
 ## Package Information
 
 - **Name:** jivas/poll_manager_interact_action
-- **Author:** AA
-- **Architype:** PollManagerAction
-- **Version:** 0.0.1
+- **Author:** V75 Inc
+- **archetype:** PollManagerAction
+- **Version:** 0.1.0
 
 ## Meta Information
 
@@ -14,7 +14,7 @@
 - **Group:** utility
 - **Type:** interact_action
 
-## Features (v0.0.1)
+## Features
 
 - **Persistent Storage:** Poll definitions and responses are stored in Jivas Collections, ensuring data survives agent restarts.
 - **Poll Dispatch:** Can dispatch polls to users via a configured `WPPConnectAction`.
@@ -72,10 +72,10 @@
 
 ## Dependencies
 
-- **Jivas Core**: `^2.0.0` (or as appropriate)
+- **Jivas Core**: `^2.1.0` (or as appropriate)
 - **Jivas Actions**:
-  - `jivas/wppconnect_action: ^0.0.1` (or version used for sending polls)
-  - `jivas/pulse_action: ^0.0.1` (for scheduled lifecycle management)
+  - `jivas/wppconnect_action: ^0.1.0` (or version used for sending polls)
+  - `jivas/pulse_action: ^0.1.0` (for scheduled lifecycle management)
 - **Python Libraries**: (Typically managed by Jivas environment, ensure compatibility if custom versions are needed)
   - `requests` (if WPPConnect uses it, or for any direct HTTP by this action - not currently used directly)
 

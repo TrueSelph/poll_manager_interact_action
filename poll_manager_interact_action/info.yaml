@@ -1,8 +1,8 @@
 package:
   name: jivas/poll_manager_interact_action
-  author: AA
-  architype: PollManagerInteractAction
-  version: 0.0.2
+  author: V75 Inc
+  archetype: PollManagerInteractAction
+  version: 0.1.2
   meta:
     title: Poll Management Interact Action
     description: Manages dispatch, response collection, and basic analytics for polls via WPPConnect.
@@ -13,10 +13,9 @@ package:
     wppconnect_action_label: "WPPConnectAction" # Default, can be overridden in DAF
     response_recorded_directive: "Thanks! Your response has been recorded."
     response_record_failed_directive: "Sorry, there was an issue recording your response. Please try again."
-    unknown_poll_directive: "Sorry, I couldn't find the poll you responded to."
+    unknown_poll_directive: "Sorry, I could not find the poll you responded to."
     # No specific webhook needed here as WPPConnectAction's webhook handles inbound and passes data
   dependencies:
-    jivas: '>=2.0.0-alpha.48'
+    jivas: ~2.1.0
     actions:
-      jivas/wppconnect_action: "~0.0.13" # Dependency for dispatching polls
-    # No pip dependencies specific to this action itself beyond what Jiva core/WPPConnect action requires
+      jivas/wppconnect_action: "~0.1.0"

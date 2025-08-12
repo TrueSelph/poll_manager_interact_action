@@ -1,19 +1,33 @@
-import:py from typing { List, Dict, Optional, Union }
-import:jac from jivas.agent.action.interact_graph_walker { interact_graph_walker }
-import:jac from jivas.agent.core.agent { Agent }
-import:jac from jivas.agent.action.action { Action }
-import:jac from jivas.agent.action.actions { Actions }
+import from typing { List, Dict, Optional, Union }
+import from jivas.agent.action.agent_graph_walker { agent_graph_walker }
+import from jivas.agent.core.agent { Agent }
+import from jivas.agent.action.action { Action }
+import from jivas.agent.action.actions { Actions }
+import from jivas.agent.modules.action.path { action_walker_path }
 
-walker get_poll_data :interact_graph_walker: {
+
+walker get_poll_data(agent_graph_walker) {
+
     has internal_poll_group_id: str = None;
     has data_type: str = "aggregated_results"; # "definition", "responses", "aggregated_results"
     has page: int = 1; # For "all_summaries"
     has limit: int = 10; # For "all_summaries"
-
     has response: Union[Dict, List, None] = None;
+    has reporting:bool = True;
 
-    can on_agent with Agent entry { visit [-->](`?Actions); }
-    can on_actions with Actions entry { visit [-->](`?Action)(?enabled==True)(?label=='PollManagerInteractAction'); }
+    class __specs__ {
+        static has private: bool = False;
+        static has path: str = action_walker_path(__module__);
+    }
+
+    can on_agent with Agent entry {
+        visit [-->](`?Actions);
+    }
+
+    can on_actions with Actions entry {
+        visit [-->](`?Action)(?enabled==True)(?label=='PollManagerInteractAction');
+    }
+
     can on_action with Action entry { # 'here' is PollManagerInteractAction
         if (self.data_type == "all_summaries") {
             self.response = here.get_all_managed_polls_summary_data(page=self.page, limit=self.limit);
@@ -29,6 +43,10 @@ walker get_poll_data :interact_graph_walker: {
             }
         } else {
             self.response = {"error": "internal_poll_group_id required for data_types other than 'all_summaries'."};
+        }
+
+        if self.reporting {
+            report self.response;
         }
     }
 }

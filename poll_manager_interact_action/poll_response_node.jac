@@ -1,8 +1,8 @@
-import:py from datetime { datetime, timezone }
-import:py from typing { List }
-import:jac from jivas.agent.core.graph_node { GraphNode }
+import from datetime { datetime, timezone }
+import from typing { List }
+import from jivas.agent.core.graph_node { GraphNode }
 
-node PollResponseNode :GraphNode: {
+node PollResponseNode(GraphNode) {
     # Stores a single user's response to a specific WhatsApp poll instance.
     # This node will be a child of a PollGroupNode.
 
@@ -12,7 +12,7 @@ node PollResponseNode :GraphNode: {
     has voted_at: str = str(datetime.now(timezone.utc).isoformat());
     has poll_group_id_ref: str = ""; # Reference back to the parent PollGroupNode.id
 
-    can set_response_details(
+    def set_response_details(
         voter_id: str,
         wa_poll_id: str,
         selected_names: List[str],
@@ -24,7 +24,7 @@ node PollResponseNode :GraphNode: {
         self.poll_group_id_ref = parent_poll_group_id;
     }
 
-    can export_data() -> dict {
+    def export_data() -> dict {
         return {
             "response_id": self.id, # GraphNode's own id
             "voter_session_id": self.voter_session_id,
