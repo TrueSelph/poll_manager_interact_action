@@ -42,3 +42,6 @@
 
 # 0.1.2
 - fix info.yaml bug
+
+# 0.1.3
+- Added import and export collections
