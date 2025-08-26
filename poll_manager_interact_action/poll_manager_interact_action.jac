@@ -462,7 +462,7 @@ node PollManagerInteractAction(InteractAction) {
         export_collection = (collection spawn _export_collection()).polls;
         return {"polls": export_collection};
     }
-    
+
     def import_collection(collection_info:dict, purge_collection:bool=True) -> bool {
         if purge_collection {
             self.get_agent().get_memory().purge_collection_memory(self.label);
@@ -471,7 +471,7 @@ node PollManagerInteractAction(InteractAction) {
 
         if collection_info {
             polls = collection_info.get("polls");
-            import_collection = collection spawn _import_collection(polls=polls);            
+            import_collection = collection spawn _import_collection(polls=polls);
             return True;
         }
         return False;
