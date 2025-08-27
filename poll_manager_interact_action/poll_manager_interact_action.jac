@@ -463,14 +463,14 @@ node PollManagerInteractAction(InteractAction) {
         return {"polls": export_collection};
     }
 
-    def import_collection(collection_info:dict, purge_collection:bool=True) -> bool {
-        if purge_collection {
+    def import_collection(data:dict, purge:bool=True) -> bool {
+        if purge {
             self.get_agent().get_memory().purge_collection_memory(self.label);
         }
         collection = self.get_collection();
 
-        if collection_info {
-            polls = collection_info.get("polls");
+        if data {
+            polls = data.get("polls");
             import_collection = collection spawn _import_collection(polls=polls);
             return True;
         }
