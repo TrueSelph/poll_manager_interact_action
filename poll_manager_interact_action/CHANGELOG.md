@@ -45,3 +45,6 @@
 
 # 0.1.3
 - Added import and export collections
+
+# 0.1.4
+- Fixed poll response bug
