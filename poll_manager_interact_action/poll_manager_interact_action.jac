@@ -268,22 +268,17 @@ node PollManagerInteractAction(InteractAction) {
 
     def touch(visitor: agent_graph_walker) -> bool {
         # (Logic to detect poll vote in visitor.data)
-        if (visitor.data and isinstance(visitor.data, list) and
-            "content" in visitor.data[0] and isinstance(visitor.data[0]["content"], dict) and
-            "selectedOptions" in visitor.data[0]["content"] and
-            visitor.data[0]["content"].get("poll_id")
-        ) {
-            self.logger.info(f"Poll vote detected for WA Poll ID: {visitor.data[0]['content'].get('poll_id')}");
+        if (poll_id := visitor.data.get("whatsapp_poll", {}).get("poll_id")) {
+            self.logger.info(f"Poll vote detected for WA Poll ID: {poll_id}");
             return True;
         }
         return False;
     }
 
     def execute(visitor: agent_graph_walker) -> None {
-        vote_data = visitor.data[0]["content"];
-        wa_poll_id_voted_on = vote_data["poll_id"]; # This is the WhatsApp message ID of the poll
+        wa_poll_id_voted_on = visitor.data.get("whatsapp_poll", {}).get("poll_id");
         user_id_voted = visitor.frame_node.session_id;
-        selected_opts_obj = vote_data["selectedOptions"]; # List of dicts e.g. [{"name": "Option A"}]
+        selected_opts_obj = visitor.data.get("whatsapp_poll", {}).get("selectedOptions");
 
         selected_option_names = [opt["name"] for opt in selected_opts_obj if opt and "name" in opt];
 
@@ -312,15 +307,13 @@ node PollManagerInteractAction(InteractAction) {
                 response_node_to_use = None;
                 if (existing_response_data and existing_response_data.response_node) {
                     # User has responded to this internal poll group before (possibly via a different WA poll ID instance of the same poll)
-                    response_node_to_use = existing_response_data.response_node;
-                    self.logger.info(f"User {user_id_voted} is updating their response for internal poll group {poll_group_node.poll_id}. Previous WA Poll ID: {response_node_to_use.whatsapp_poll_id_responded_to}, New WA Poll ID: {wa_poll_id_voted_on}");
 
-                    # Update existing response node
-                    response_node_to_use.selected_options_names = selected_option_names;
-                    response_node_to_use.voted_at = datetime.now(timezone.utc).isoformat();
-                    # Important: Update which WA Poll ID this latest vote corresponds to,
-                    # especially if they are voting on a newer dispatch of the same conceptual poll.
-                    response_node_to_use.whatsapp_poll_id_responded_to = wa_poll_id_voted_on;
+                    poll_group_node spawn _update_user_response_for_poll_group(
+                        user_id_to_find=user_id_voted,
+                        selected_options_names=selected_option_names,
+                        voted_at=datetime.now(timezone.utc).isoformat(),
+                        whatsapp_poll_id_responded_to=wa_poll_id_voted_on
+                    );
 
                     visitor.interaction_node.add_directive(self.response_recorded_directive); # i.e "Your response has been updated."
                     self.logger.info(f"Updated vote from {user_id_voted} for WA Poll {wa_poll_id_voted_on} (Internal Group: {poll_group_node.poll_id}). New Choices: {selected_option_names}");
@@ -460,10 +453,109 @@ node PollManagerInteractAction(InteractAction) {
         self.logger.error(f"Poll {internal_poll_group_id} not found for deletion.");
         return False;
     }
+
+    def export_collection() -> dict {
+        collection = self.get_collection();
+        export_collection = (collection spawn _export_collection()).polls;
+        return {"polls": export_collection};
+    }
+
+    def import_collection(data:dict, purge:bool=True) -> bool {
+        if purge {
+            self.get_agent().get_memory().purge_collection_memory(self.label);
+        }
+        collection = self.get_collection();
+
+        if data {
+            polls = data.get("polls");
+            import_collection = collection spawn _import_collection(polls=polls);
+            return True;
+        }
+        return False;
+    }
 }
 
 
 
+walker _export_collection {
+    has polls:dict = {};
+
+    obj __specs__ {
+        static has private:bool = True;
+    }
+
+    can on_collection with Collection entry {
+        visit [-->](`?PollGroupNode);
+    }
+
+    can on_poll_group_node with PollGroupNode entry {
+        self.polls[here.poll_id] = {"poll_group": here.export()};
+        visit [-->](`?PollResponseNode);
+    }
+
+    can on_poll_response_node with PollResponseNode entry {
+        poll_id = [<--](`?PollGroupNode)[0].poll_id;
+        if "response" not in self.polls[poll_id] {
+            self.polls[poll_id]["response"] = [here.export()];
+        } else {
+            self.polls[poll_id]["response"].append(here.export());
+        }
+    }
+
+}
+
+walker _import_collection {
+    has polls:dict = {};
+
+    obj __specs__ {
+        static has private:bool = True;
+    }
+
+    can on_collection with Collection entry {
+        for poll_id in self.polls {
+            visit [-->](`?PollGroupNode)(?poll_id == poll_id) else {
+                poll_group_node = PollGroupNode(
+                    poll_id=poll_id,
+                    name=self.polls[poll_id]["poll_group"].get("name"),
+                    choices=self.polls[poll_id]["poll_group"].get("choices"),
+                    options=self.polls[poll_id]["poll_group"].get("options"),
+                    created_at=self.polls[poll_id]["poll_group"].get("created_at"),
+                    expires_at=self.polls[poll_id]["poll_group"].get("expires_at"),
+                    status=self.polls[poll_id]["poll_group"].get("status"),
+                    original_preferred_id=self.polls[poll_id]["poll_group"].get("original_preferred_id")
+                );
+                here ++> poll_group_node;
+
+                for response in self.polls[poll_id]["response"] {
+                    poll_response_node = PollResponseNode(
+                        voter_session_id=response.get("voter_session_id"),
+                        whatsapp_poll_id_responded_to=response.get("whatsapp_poll_id_responded_to"),
+                        selected_options_names=response.get("selected_options_names"),
+                        voted_at=response.get("voted_at"),
+                        poll_group_id_ref=response.get("poll_group_id_ref")
+                    );
+
+                    poll_group_node ++> poll_response_node;
+                }
+            }
+        }
+    }
+
+    can on_poll_group_node with PollGroupNode entry {
+        for response in self.polls[here.poll_id]["response"] {
+            if not [-->](`?PollResponseNode)(?voter_session_id == response.get("voter_session_id")) {
+                poll_response_node = PollResponseNode(
+                    voter_session_id=response.get("voter_session_id"),
+                    whatsapp_poll_id_responded_to=response.get("whatsapp_poll_id_responded_to"),
+                    selected_options_names=response.get("selected_options_names"),
+                    voted_at=response.get("voted_at"),
+                    poll_group_id_ref=response.get("poll_group_id_ref")
+                );
+                here ++> poll_response_node;
+            }
+        }
+    }
+}
 
 
 # -------------------------------------------- #
@@ -687,3 +779,32 @@ walker _find_user_response_for_poll_group { # This walker spawns on a PollGroupN
         disengage; # Found the first one, stop. (Assumes one response per user per poll group)
     }
 }
+
+
+
+
+walker _update_user_response_for_poll_group { # This walker spawns on a PollGroupNode
+    obj __specs__ {
+        static has private: bool = True;
+    }
+
+    has user_id_to_find: str = "";
+    has selected_options_names:list = [];
+    has voted_at: str = "";
+    has whatsapp_poll_id_responded_to: str = "";
+
+
+    can on_poll_group_node with PollGroupNode entry {
+        # Traverse to child PollResponseNodes and filter by voter_session_id
+        visit [-->](`?PollResponseNode)(?voter_session_id == self.user_id_to_find);
+    }
+
+    can on_poll_response_node with PollResponseNode entry {
+        # If we reach here, a matching response node was found
+        here.selected_options_names = self.selected_options_names;
+        here.voted_at = self.voted_at;
+        here.whatsapp_poll_id_responded_to = self.whatsapp_poll_id_responded_to;
+        disengage; # Found the first one, stop. (Assumes one response per user per poll group)
+    }
+}
+
